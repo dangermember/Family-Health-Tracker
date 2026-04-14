@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "Family Health Tracker"
+version = "1.0.0"
+id = "artifacts/family-health"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 25235
+
+[services.development]
+run = "pnpm --filter @workspace/family-health run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/family-health", "run", "build" ]
+publicDir = "artifacts/family-health/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "25235"
+BASE_PATH = "/"

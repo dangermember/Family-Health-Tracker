@@ -3,13 +3,25 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Family Health Tracker API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: auth
+    description: Authentication operations
+  - name: users
+    description: User management
+  - name: weight
+    description: Weight tracking
+  - name: length
+    description: Length/height tracking
+  - name: period
+    description: Period tracking (private, women only)
+  - name: stats
+    description: Stats and summaries
 paths:
   /healthz:
     get:
@@ -24,6 +36,680 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /auth/register:
+    post:
+      operationId: register
+      tags: [auth]
+      summary: Register a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterBody"
+      responses:
+        "201":
+          description: Registration submitted, pending approval
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Username already exists
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      summary: Login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginBody"
+      responses:
+        "200":
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "400":
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Account suspended or pending approval
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/logout:
+    post:
+      operationId: logout
+      tags: [auth]
+      summary: Logout
+      responses:
+        "200":
+          description: Logged out
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /auth/me:
+    get:
+      operationId: getMe
+      tags: [auth]
+      summary: Get current user
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /users:
+    get:
+      operationId: listUsers
+      tags: [users]
+      summary: List all users (admin only)
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, active, suspended]
+      responses:
+        "200":
+          description: List of users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/User"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    post:
+      operationId: createUser
+      tags: [users]
+      summary: Create a new user (admin only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateUserBody"
+      responses:
+        "201":
+          description: User created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /users/{id}:
+    get:
+      operationId: getUser
+      tags: [users]
+      summary: Get a user (admin only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: User
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    patch:
+      operationId: updateUser
+      tags: [users]
+      summary: Update a user (admin only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateUserBody"
+      responses:
+        "200":
+          description: Updated user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      operationId: deleteUser
+      tags: [users]
+      summary: Delete a user (admin only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /users/{id}/reset-password:
+    post:
+      operationId: resetUserPassword
+      tags: [users]
+      summary: Reset a user's password (admin only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ResetPasswordBody"
+      responses:
+        "200":
+          description: Password reset
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /users/{id}/suspend:
+    post:
+      operationId: suspendUser
+      tags: [users]
+      summary: Suspend a user (admin only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: User suspended
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /users/{id}/approve:
+    post:
+      operationId: approveUser
+      tags: [users]
+      summary: Approve a pending user (admin only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: User approved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /users/{id}/activate:
+    post:
+      operationId: activateUser
+      tags: [users]
+      summary: Reactivate a suspended user (admin only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: User activated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /weight:
+    get:
+      operationId: listWeightEntries
+      tags: [weight]
+      summary: List weight entries for the current user
+      parameters:
+        - name: memberId
+          in: query
+          schema:
+            type: ["integer", "null"]
+          description: Family member user ID (if viewing own family member)
+      responses:
+        "200":
+          description: List of weight entries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/WeightEntry"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    post:
+      operationId: createWeightEntry
+      tags: [weight]
+      summary: Add a weight entry
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateWeightEntryBody"
+      responses:
+        "201":
+          description: Weight entry created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WeightEntry"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /weight/{id}:
+    patch:
+      operationId: updateWeightEntry
+      tags: [weight]
+      summary: Update a weight entry
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateWeightEntryBody"
+      responses:
+        "200":
+          description: Updated weight entry
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WeightEntry"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      operationId: deleteWeightEntry
+      tags: [weight]
+      summary: Delete a weight entry
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /length:
+    get:
+      operationId: listLengthEntries
+      tags: [length]
+      summary: List length/height entries for the current user
+      parameters:
+        - name: memberId
+          in: query
+          schema:
+            type: ["integer", "null"]
+          description: Family member user ID
+      responses:
+        "200":
+          description: List of length entries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/LengthEntry"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    post:
+      operationId: createLengthEntry
+      tags: [length]
+      summary: Add a length/height entry
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateLengthEntryBody"
+      responses:
+        "201":
+          description: Length entry created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LengthEntry"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /length/{id}:
+    patch:
+      operationId: updateLengthEntry
+      tags: [length]
+      summary: Update a length/height entry
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateLengthEntryBody"
+      responses:
+        "200":
+          description: Updated length entry
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LengthEntry"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      operationId: deleteLengthEntry
+      tags: [length]
+      summary: Delete a length/height entry
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /period:
+    get:
+      operationId: listPeriodEntries
+      tags: [period]
+      summary: List period entries for the current user (private)
+      responses:
+        "200":
+          description: List of period entries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PeriodEntry"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden (not available for this user)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    post:
+      operationId: createPeriodEntry
+      tags: [period]
+      summary: Add a period entry (private)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatePeriodEntryBody"
+      responses:
+        "201":
+          description: Period entry created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PeriodEntry"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /period/{id}:
+    patch:
+      operationId: updatePeriodEntry
+      tags: [period]
+      summary: Update a period entry
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdatePeriodEntryBody"
+      responses:
+        "200":
+          description: Updated period entry
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PeriodEntry"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      operationId: deletePeriodEntry
+      tags: [period]
+      summary: Delete a period entry
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /stats/my-summary:
+    get:
+      operationId: getMySummary
+      tags: [stats]
+      summary: Get current user's health summary (latest readings, trends)
+      responses:
+        "200":
+          description: Health summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthSummary"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /stats/admin-overview:
+    get:
+      operationId: getAdminOverview
+      tags: [stats]
+      summary: Get admin overview stats (admin only)
+      responses:
+        "200":
+          description: Admin overview
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminOverview"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +720,369 @@ components:
       required:
         - status
 
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error
+
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+      required:
+        - success
+
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        username:
+          type: string
+        displayName:
+          type: string
+        role:
+          type: string
+          enum: [admin, user]
+        gender:
+          type: ["string", "null"]
+          enum: [male, female, null]
+        status:
+          type: string
+          enum: [pending, active, suspended]
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - username
+        - displayName
+        - role
+        - gender
+        - status
+        - createdAt
+
+    AuthResponse:
+      type: object
+      properties:
+        user:
+          $ref: "#/components/schemas/User"
+        message:
+          type: string
+      required:
+        - user
+
+    RegisterBody:
+      type: object
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+        displayName:
+          type: string
+        gender:
+          type: string
+          enum: [male, female]
+      required:
+        - username
+        - password
+        - displayName
+        - gender
+
+    LoginBody:
+      type: object
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+      required:
+        - username
+        - password
+
+    CreateUserBody:
+      type: object
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+        displayName:
+          type: string
+        role:
+          type: string
+          enum: [admin, user]
+        gender:
+          type: string
+          enum: [male, female]
+        status:
+          type: string
+          enum: [pending, active, suspended]
+      required:
+        - username
+        - password
+        - displayName
+        - role
+        - gender
+
+    UpdateUserBody:
+      type: object
+      properties:
+        displayName:
+          type: string
+        role:
+          type: string
+          enum: [admin, user]
+        gender:
+          type: string
+          enum: [male, female]
+        status:
+          type: string
+          enum: [pending, active, suspended]
+
+    ResetPasswordBody:
+      type: object
+      properties:
+        newPassword:
+          type: string
+      required:
+        - newPassword
+
+    WeightEntry:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        weightKg:
+          type: number
+          format: float
+        recordedAt:
+          type: string
+          format: date-time
+        note:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - userId
+        - weightKg
+        - recordedAt
+        - note
+        - createdAt
+
+    CreateWeightEntryBody:
+      type: object
+      properties:
+        weightKg:
+          type: number
+          format: float
+        recordedAt:
+          type: string
+          format: date-time
+        note:
+          type: ["string", "null"]
+        memberId:
+          type: ["integer", "null"]
+      required:
+        - weightKg
+        - recordedAt
+
+    UpdateWeightEntryBody:
+      type: object
+      properties:
+        weightKg:
+          type: number
+          format: float
+        recordedAt:
+          type: string
+          format: date-time
+        note:
+          type: ["string", "null"]
+
+    LengthEntry:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        lengthCm:
+          type: number
+          format: float
+        recordedAt:
+          type: string
+          format: date-time
+        note:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - userId
+        - lengthCm
+        - recordedAt
+        - note
+        - createdAt
+
+    CreateLengthEntryBody:
+      type: object
+      properties:
+        lengthCm:
+          type: number
+          format: float
+        recordedAt:
+          type: string
+          format: date-time
+        note:
+          type: ["string", "null"]
+        memberId:
+          type: ["integer", "null"]
+      required:
+        - lengthCm
+        - recordedAt
+
+    UpdateLengthEntryBody:
+      type: object
+      properties:
+        lengthCm:
+          type: number
+          format: float
+        recordedAt:
+          type: string
+          format: date-time
+        note:
+          type: ["string", "null"]
+
+    PeriodEntry:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: ["string", "null"]
+          format: date
+        numberOfDays:
+          type: ["integer", "null"]
+        note:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - userId
+        - startDate
+        - endDate
+        - numberOfDays
+        - note
+        - createdAt
+
+    CreatePeriodEntryBody:
+      type: object
+      properties:
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: ["string", "null"]
+          format: date
+        numberOfDays:
+          type: ["integer", "null"]
+        note:
+          type: ["string", "null"]
+      required:
+        - startDate
+
+    UpdatePeriodEntryBody:
+      type: object
+      properties:
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: ["string", "null"]
+          format: date
+        numberOfDays:
+          type: ["integer", "null"]
+        note:
+          type: ["string", "null"]
+
+    HealthSummary:
+      type: object
+      properties:
+        latestWeight:
+          type: ["number", "null"]
+          format: float
+        weightTrend:
+          type: ["number", "null"]
+          format: float
+        latestLength:
+          type: ["number", "null"]
+          format: float
+        weightEntriesCount:
+          type: integer
+        lengthEntriesCount:
+          type: integer
+        lastPeriodStart:
+          type: ["string", "null"]
+          format: date
+        nextPeriodEstimate:
+          type: ["string", "null"]
+          format: date
+        avgCycleLength:
+          type: ["number", "null"]
+          format: float
+      required:
+        - latestWeight
+        - weightTrend
+        - latestLength
+        - weightEntriesCount
+        - lengthEntriesCount
+        - lastPeriodStart
+        - nextPeriodEstimate
+        - avgCycleLength
+
+    AdminOverview:
+      type: object
+      properties:
+        totalUsers:
+          type: integer
+        activeUsers:
+          type: integer
+        pendingApprovals:
+          type: integer
+        suspendedUsers:
+          type: integer
+        totalWeightEntries:
+          type: integer
+        totalLengthEntries:
+          type: integer
+        recentRegistrations:
+          type: array
+          items:
+            $ref: "#/components/schemas/User"
+      required:
+        - totalUsers
+        - activeUsers
+        - pendingApprovals
+        - suspendedUsers
+        - totalWeightEntries
+        - totalLengthEntries
+        - recentRegistrations
