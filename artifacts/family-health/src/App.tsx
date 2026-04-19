@@ -8,6 +8,7 @@ import NotFound from "@/pages/not-found";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
 import Dashboard from "@/pages/Dashboard";
+import FamilyMembers from "@/pages/FamilyMembers";
 import Weight from "@/pages/Weight";
 import Length from "@/pages/Length";
 import Period from "@/pages/Period";
@@ -28,6 +29,7 @@ function App() {
                 <Route path="/login" component={Login} />
                 <Route path="/register" component={Register} />
                 <Route path="/dashboard" component={Dashboard} />
+                <Route path="/family-members" component={FamilyMembers} />
                 <Route path="/weight" component={Weight} />
                 <Route path="/length" component={Length} />
                 <Route path="/period" component={Period} />

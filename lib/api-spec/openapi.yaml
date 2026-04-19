@@ -2,7 +2,7 @@ openapi: 3.1.0
 info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
-  version: 0.1.0
+  version: 0.2.0
   description: Family Health Tracker API
 servers:
   - url: /api
@@ -13,22 +13,21 @@ tags:
   - name: auth
     description: Authentication operations
   - name: users
-    description: User management
+    description: User management (admin only)
+  - name: family-members
+    description: Family member management
   - name: weight
-    description: Weight tracking
+    description: Weight tracking per family member
   - name: length
-    description: Length/height tracking
+    description: Height/length tracking per family member
   - name: period
-    description: Period tracking (private, women only)
-  - name: stats
-    description: Stats and summaries
+    description: Period tracking per family member (female only)
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -41,7 +40,7 @@ paths:
     post:
       operationId: register
       tags: [auth]
-      summary: Register a new user
+      summary: Register a new user (pending admin approval)
       requestBody:
         required: true
         content:
@@ -130,6 +129,29 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+    patch:
+      operationId: updateMe
+      tags: [auth]
+      summary: Update current user profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateMeBody"
+      responses:
+        "200":
+          description: Updated user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 
   /users:
     get:
@@ -176,12 +198,6 @@ paths:
                 $ref: "#/components/schemas/User"
         "400":
           description: Validation error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "403":
-          description: Forbidden
           content:
             application/json:
               schema:
@@ -240,12 +256,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
-        "404":
-          description: Not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
     delete:
       operationId: deleteUser
       tags: [users]
@@ -290,12 +300,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/SuccessResponse"
-        "404":
-          description: Not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
 
   /users/{id}/suspend:
     post:
@@ -315,12 +319,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/User"
-        "404":
-          description: Not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
 
   /users/{id}/approve:
     post:
@@ -340,12 +338,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/User"
-        "404":
-          description: Not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
 
   /users/{id}/activate:
     post:
@@ -365,6 +357,136 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/User"
+
+  /stats/admin-overview:
+    get:
+      operationId: getAdminOverview
+      tags: [users]
+      summary: Get admin overview stats (admin only)
+      responses:
+        "200":
+          description: Admin overview
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminOverview"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /family-members:
+    get:
+      operationId: listFamilyMembers
+      tags: [family-members]
+      summary: List current user's family members
+      responses:
+        "200":
+          description: List of family members
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/FamilyMember"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    post:
+      operationId: createFamilyMember
+      tags: [family-members]
+      summary: Add a family member
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateFamilyMemberBody"
+      responses:
+        "201":
+          description: Family member created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FamilyMember"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /family-members/{id}:
+    get:
+      operationId: getFamilyMember
+      tags: [family-members]
+      summary: Get a family member
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Family member
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FamilyMember"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    patch:
+      operationId: updateFamilyMember
+      tags: [family-members]
+      summary: Update a family member
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateFamilyMemberBody"
+      responses:
+        "200":
+          description: Updated family member
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FamilyMember"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      operationId: deleteFamilyMember
+      tags: [family-members]
+      summary: Delete a family member and all their data
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
         "404":
           description: Not found
           content:
@@ -376,13 +498,13 @@ paths:
     get:
       operationId: listWeightEntries
       tags: [weight]
-      summary: List weight entries for the current user
+      summary: List weight entries for a family member
       parameters:
         - name: memberId
           in: query
+          required: true
           schema:
-            type: ["integer", "null"]
-          description: Family member user ID (if viewing own family member)
+            type: integer
       responses:
         "200":
           description: List of weight entries
@@ -401,7 +523,7 @@ paths:
     post:
       operationId: createWeightEntry
       tags: [weight]
-      summary: Add a weight entry
+      summary: Add a weight entry for a family member
       requestBody:
         required: true
         content:
@@ -465,24 +587,18 @@ paths:
       responses:
         "204":
           description: Deleted
-        "404":
-          description: Not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
 
   /length:
     get:
       operationId: listLengthEntries
       tags: [length]
-      summary: List length/height entries for the current user
+      summary: List height/length entries for a family member
       parameters:
         - name: memberId
           in: query
+          required: true
           schema:
-            type: ["integer", "null"]
-          description: Family member user ID
+            type: integer
       responses:
         "200":
           description: List of length entries
@@ -501,7 +617,7 @@ paths:
     post:
       operationId: createLengthEntry
       tags: [length]
-      summary: Add a length/height entry
+      summary: Add a height/length entry for a family member
       requestBody:
         required: true
         content:
@@ -526,7 +642,7 @@ paths:
     patch:
       operationId: updateLengthEntry
       tags: [length]
-      summary: Update a length/height entry
+      summary: Update a height/length entry
       parameters:
         - name: id
           in: path
@@ -555,7 +671,7 @@ paths:
     delete:
       operationId: deleteLengthEntry
       tags: [length]
-      summary: Delete a length/height entry
+      summary: Delete a height/length entry
       parameters:
         - name: id
           in: path
@@ -565,18 +681,18 @@ paths:
       responses:
         "204":
           description: Deleted
-        "404":
-          description: Not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
 
   /period:
     get:
       operationId: listPeriodEntries
       tags: [period]
-      summary: List period entries for the current user (private)
+      summary: List period entries for a female family member
+      parameters:
+        - name: memberId
+          in: query
+          required: true
+          schema:
+            type: integer
       responses:
         "200":
           description: List of period entries
@@ -593,7 +709,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
         "403":
-          description: Forbidden (not available for this user)
+          description: Forbidden (member is not female)
           content:
             application/json:
               schema:
@@ -601,7 +717,7 @@ paths:
     post:
       operationId: createPeriodEntry
       tags: [period]
-      summary: Add a period entry (private)
+      summary: Add a period entry for a female family member
       requestBody:
         required: true
         content:
@@ -665,50 +781,6 @@ paths:
       responses:
         "204":
           description: Deleted
-        "404":
-          description: Not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-
-  /stats/my-summary:
-    get:
-      operationId: getMySummary
-      tags: [stats]
-      summary: Get current user's health summary (latest readings, trends)
-      responses:
-        "200":
-          description: Health summary
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/HealthSummary"
-        "401":
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-
-  /stats/admin-overview:
-    get:
-      operationId: getAdminOverview
-      tags: [stats]
-      summary: Get admin overview stats (admin only)
-      responses:
-        "200":
-          description: Admin overview
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/AdminOverview"
-        "403":
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
 
 components:
   schemas:
@@ -717,16 +789,14 @@ components:
       properties:
         status:
           type: string
-      required:
-        - status
+      required: [status]
 
     ErrorResponse:
       type: object
       properties:
         error:
           type: string
-      required:
-        - error
+      required: [error]
 
     SuccessResponse:
       type: object
@@ -735,8 +805,7 @@ components:
           type: boolean
         message:
           type: string
-      required:
-        - success
+      required: [success]
 
     User:
       type: object
@@ -750,23 +819,13 @@ components:
         role:
           type: string
           enum: [admin, user]
-        gender:
-          type: ["string", "null"]
-          enum: [male, female, null]
         status:
           type: string
           enum: [pending, active, suspended]
         createdAt:
           type: string
           format: date-time
-      required:
-        - id
-        - username
-        - displayName
-        - role
-        - gender
-        - status
-        - createdAt
+      required: [id, username, displayName, role, status, createdAt]
 
     AuthResponse:
       type: object
@@ -775,8 +834,7 @@ components:
           $ref: "#/components/schemas/User"
         message:
           type: string
-      required:
-        - user
+      required: [user]
 
     RegisterBody:
       type: object
@@ -787,14 +845,7 @@ components:
           type: string
         displayName:
           type: string
-        gender:
-          type: string
-          enum: [male, female]
-      required:
-        - username
-        - password
-        - displayName
-        - gender
+      required: [username, password, displayName]
 
     LoginBody:
       type: object
@@ -803,9 +854,17 @@ components:
           type: string
         password:
           type: string
-      required:
-        - username
-        - password
+      required: [username, password]
+
+    UpdateMeBody:
+      type: object
+      properties:
+        displayName:
+          type: string
+        currentPassword:
+          type: string
+        newPassword:
+          type: string
 
     CreateUserBody:
       type: object
@@ -819,18 +878,10 @@ components:
         role:
           type: string
           enum: [admin, user]
-        gender:
-          type: string
-          enum: [male, female]
         status:
           type: string
           enum: [pending, active, suspended]
-      required:
-        - username
-        - password
-        - displayName
-        - role
-        - gender
+      required: [username, password, displayName]
 
     UpdateUserBody:
       type: object
@@ -840,9 +891,6 @@ components:
         role:
           type: string
           enum: [admin, user]
-        gender:
-          type: string
-          enum: [male, female]
         status:
           type: string
           enum: [pending, active, suspended]
@@ -852,19 +900,91 @@ components:
       properties:
         newPassword:
           type: string
-      required:
-        - newPassword
+      required: [newPassword]
 
-    WeightEntry:
+    AdminOverview:
+      type: object
+      properties:
+        totalUsers:
+          type: integer
+        pendingUsers:
+          type: integer
+        activeUsers:
+          type: integer
+        suspendedUsers:
+          type: integer
+        totalFamilyMembers:
+          type: integer
+        totalWeightEntries:
+          type: integer
+        totalLengthEntries:
+          type: integer
+        totalPeriodEntries:
+          type: integer
+      required:
+        - totalUsers
+        - pendingUsers
+        - activeUsers
+        - suspendedUsers
+        - totalFamilyMembers
+        - totalWeightEntries
+        - totalLengthEntries
+        - totalPeriodEntries
+
+    FamilyMember:
       type: object
       properties:
         id:
           type: integer
         userId:
           type: integer
+        name:
+          type: string
+        gender:
+          type: string
+          enum: [male, female]
+        dateOfBirth:
+          type: ["string", "null"]
+          format: date
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, userId, name, gender, createdAt]
+
+    CreateFamilyMemberBody:
+      type: object
+      properties:
+        name:
+          type: string
+        gender:
+          type: string
+          enum: [male, female]
+        dateOfBirth:
+          type: string
+          format: date
+      required: [name, gender]
+
+    UpdateFamilyMemberBody:
+      type: object
+      properties:
+        name:
+          type: string
+        gender:
+          type: string
+          enum: [male, female]
+        dateOfBirth:
+          type: ["string", "null"]
+          format: date
+
+    WeightEntry:
+      type: object
+      properties:
+        id:
+          type: integer
+        memberId:
+          type: integer
         weightKg:
           type: number
-          format: float
         recordedAt:
           type: string
           format: date-time
@@ -873,37 +993,27 @@ components:
         createdAt:
           type: string
           format: date-time
-      required:
-        - id
-        - userId
-        - weightKg
-        - recordedAt
-        - note
-        - createdAt
+      required: [id, memberId, weightKg, recordedAt, createdAt]
 
     CreateWeightEntryBody:
       type: object
       properties:
+        memberId:
+          type: integer
         weightKg:
           type: number
-          format: float
         recordedAt:
           type: string
           format: date-time
         note:
-          type: ["string", "null"]
-        memberId:
-          type: ["integer", "null"]
-      required:
-        - weightKg
-        - recordedAt
+          type: string
+      required: [memberId, weightKg, recordedAt]
 
     UpdateWeightEntryBody:
       type: object
       properties:
         weightKg:
           type: number
-          format: float
         recordedAt:
           type: string
           format: date-time
@@ -915,11 +1025,10 @@ components:
       properties:
         id:
           type: integer
-        userId:
+        memberId:
           type: integer
         lengthCm:
           type: number
-          format: float
         recordedAt:
           type: string
           format: date-time
@@ -928,37 +1037,27 @@ components:
         createdAt:
           type: string
           format: date-time
-      required:
-        - id
-        - userId
-        - lengthCm
-        - recordedAt
-        - note
-        - createdAt
+      required: [id, memberId, lengthCm, recordedAt, createdAt]
 
     CreateLengthEntryBody:
       type: object
       properties:
+        memberId:
+          type: integer
         lengthCm:
           type: number
-          format: float
         recordedAt:
           type: string
           format: date-time
         note:
-          type: ["string", "null"]
-        memberId:
-          type: ["integer", "null"]
-      required:
-        - lengthCm
-        - recordedAt
+          type: string
+      required: [memberId, lengthCm, recordedAt]
 
     UpdateLengthEntryBody:
       type: object
       properties:
         lengthCm:
           type: number
-          format: float
         recordedAt:
           type: string
           format: date-time
@@ -970,7 +1069,7 @@ components:
       properties:
         id:
           type: integer
-        userId:
+        memberId:
           type: integer
         startDate:
           type: string
@@ -980,35 +1079,28 @@ components:
           format: date
         numberOfDays:
           type: ["integer", "null"]
+          description: Automatically calculated from startDate and endDate
         note:
           type: ["string", "null"]
         createdAt:
           type: string
           format: date-time
-      required:
-        - id
-        - userId
-        - startDate
-        - endDate
-        - numberOfDays
-        - note
-        - createdAt
+      required: [id, memberId, startDate, createdAt]
 
     CreatePeriodEntryBody:
       type: object
       properties:
+        memberId:
+          type: integer
         startDate:
           type: string
           format: date
         endDate:
-          type: ["string", "null"]
+          type: string
           format: date
-        numberOfDays:
-          type: ["integer", "null"]
         note:
-          type: ["string", "null"]
-      required:
-        - startDate
+          type: string
+      required: [memberId, startDate]
 
     UpdatePeriodEntryBody:
       type: object
@@ -1019,70 +1111,5 @@ components:
         endDate:
           type: ["string", "null"]
           format: date
-        numberOfDays:
-          type: ["integer", "null"]
         note:
           type: ["string", "null"]
-
-    HealthSummary:
-      type: object
-      properties:
-        latestWeight:
-          type: ["number", "null"]
-          format: float
-        weightTrend:
-          type: ["number", "null"]
-          format: float
-        latestLength:
-          type: ["number", "null"]
-          format: float
-        weightEntriesCount:
-          type: integer
-        lengthEntriesCount:
-          type: integer
-        lastPeriodStart:
-          type: ["string", "null"]
-          format: date
-        nextPeriodEstimate:
-          type: ["string", "null"]
-          format: date
-        avgCycleLength:
-          type: ["number", "null"]
-          format: float
-      required:
-        - latestWeight
-        - weightTrend
-        - latestLength
-        - weightEntriesCount
-        - lengthEntriesCount
-        - lastPeriodStart
-        - nextPeriodEstimate
-        - avgCycleLength
-
-    AdminOverview:
-      type: object
-      properties:
-        totalUsers:
-          type: integer
-        activeUsers:
-          type: integer
-        pendingApprovals:
-          type: integer
-        suspendedUsers:
-          type: integer
-        totalWeightEntries:
-          type: integer
-        totalLengthEntries:
-          type: integer
-        recentRegistrations:
-          type: array
-          items:
-            $ref: "#/components/schemas/User"
-      required:
-        - totalUsers
-        - activeUsers
-        - pendingApprovals
-        - suspendedUsers
-        - totalWeightEntries
-        - totalLengthEntries
-        - recentRegistrations

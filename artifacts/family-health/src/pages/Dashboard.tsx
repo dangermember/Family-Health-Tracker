@@ -1,136 +1,127 @@
+import { useListFamilyMembers, useGetAdminOverview } from "@workspace/api-client-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { useGetMySummary, getGetMySummaryQueryKey } from "@workspace/api-client-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Scale, Ruler, Droplet, TrendingUp, TrendingDown, Minus } from "lucide-react";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Users, Scale, Ruler, Droplet, UserPlus, Plus, Baby, User } from "lucide-react";
+import { Link } from "wouter";
+import { format } from "date-fns";
+
+type FamilyMember = { id: number; name: string; gender: string; dateOfBirth?: string | null; };
+
+function calcAge(dob: string | null | undefined): string | null {
+  if (!dob) return null;
+  const birth = new Date(dob);
+  const now = new Date();
+  let years = now.getFullYear() - birth.getFullYear();
+  const m = now.getMonth() - birth.getMonth();
+  if (m < 0 || (m === 0 && now.getDate() < birth.getDate())) years--;
+  if (years < 2) {
+    const months = Math.floor((now.getTime() - birth.getTime()) / (1000 * 60 * 60 * 24 * 30.44));
+    return `${months} months old`;
+  }
+  return `${years} years old`;
+}
 
 export default function Dashboard() {
   const { user } = useAuth();
-  const { data: summary, isLoading } = useGetMySummary({
-    query: {
-      queryKey: getGetMySummaryQueryKey(),
-      enabled: !!user && user.status === 'active',
-    }
-  });
+  const { data: members = [], isLoading } = useListFamilyMembers() as { data: FamilyMember[]; isLoading: boolean };
+  const { data: overview } = useGetAdminOverview({ query: { enabled: user?.role === "admin" } });
 
-  if (user?.status !== 'active') {
-    return (
-      <div className="flex flex-col items-center justify-center py-20 text-center space-y-4">
-        <h1 className="text-3xl font-serif">Account Status: {user?.status}</h1>
-        <p className="text-muted-foreground max-w-md">
-          {user?.status === 'pending' 
-            ? "Your account is pending approval from a family administrator. Please check back later."
-            : "Your account has been suspended. Please contact a family administrator."}
-        </p>
-      </div>
-    );
-  }
+  const femaleMembers = (members as FamilyMember[]).filter(m => m.gender === "female");
 
   return (
-    <div className="space-y-8">
+    <div className="max-w-4xl mx-auto space-y-6">
       <div>
-        <h1 className="text-3xl font-serif text-foreground">Good to see you, {user.displayName}</h1>
-        <p className="text-muted-foreground mt-2">Here's your latest health overview.</p>
+        <h1 className="text-2xl font-serif font-semibold text-foreground">
+          Welcome back, {user?.displayName} 👋
+        </h1>
+        <p className="text-muted-foreground text-sm mt-1">Here's an overview of your family's health tracking</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-              <Scale className="w-4 h-4 text-primary" />
-              Latest Weight
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <Skeleton className="h-10 w-24" />
-            ) : summary?.latestWeight ? (
-              <div className="flex flex-col">
-                <span className="text-4xl font-serif">{summary.latestWeight} <span className="text-lg text-muted-foreground">kg</span></span>
-                {summary.weightTrend !== null && (
-                  <div className="flex items-center gap-1 mt-2 text-sm text-muted-foreground">
-                    {summary.weightTrend > 0 ? (
-                      <><TrendingUp className="w-4 h-4 text-destructive" /> Up {Math.abs(summary.weightTrend).toFixed(1)}kg</>
-                    ) : summary.weightTrend < 0 ? (
-                      <><TrendingDown className="w-4 h-4 text-primary" /> Down {Math.abs(summary.weightTrend).toFixed(1)}kg</>
-                    ) : (
-                      <><Minus className="w-4 h-4" /> No change</>
-                    )}
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="text-sm text-muted-foreground">No weight logged yet.</div>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-              <Ruler className="w-4 h-4 text-primary" />
-              Latest Length / Height
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <Skeleton className="h-10 w-24" />
-            ) : summary?.latestLength ? (
-              <div className="flex flex-col">
-                <span className="text-4xl font-serif">{summary.latestLength} <span className="text-lg text-muted-foreground">cm</span></span>
-              </div>
-            ) : (
-              <div className="text-sm text-muted-foreground">No length logged yet.</div>
-            )}
-          </CardContent>
-        </Card>
-
-        {user.gender === "female" && (
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                <Droplet className="w-4 h-4 text-destructive" />
-                Cycle Summary
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {isLoading ? (
-                <Skeleton className="h-10 w-full" />
-              ) : summary?.lastPeriodStart ? (
-                <div className="flex flex-col space-y-2">
-                  <div>
-                    <span className="text-sm text-muted-foreground block">Last started:</span>
-                    <span className="font-medium">{new Date(summary.lastPeriodStart).toLocaleDateString()}</span>
-                  </div>
-                  {summary.nextPeriodEstimate && (
-                    <div>
-                      <span className="text-sm text-muted-foreground block">Next estimate:</span>
-                      <span className="font-medium">{new Date(summary.nextPeriodEstimate).toLocaleDateString()}</span>
-                    </div>
-                  )}
+      {user?.role === "admin" && overview && (
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          {[
+            { label: "Total Users", value: overview.totalUsers, icon: Users, color: "text-blue-500" },
+            { label: "Pending Approval", value: overview.pendingUsers, icon: UserPlus, color: "text-amber-500" },
+            { label: "Family Members", value: overview.totalFamilyMembers, icon: Users, color: "text-emerald-500" },
+            { label: "Weight Entries", value: overview.totalWeightEntries, icon: Scale, color: "text-primary" },
+          ].map(({ label, value, icon: Icon, color }) => (
+            <Card key={label}>
+              <CardContent className="p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <Icon className={`w-4 h-4 ${color}`} />
+                  <span className="text-xs text-muted-foreground uppercase tracking-wide">{label}</span>
                 </div>
-              ) : (
-                <div className="text-sm text-muted-foreground">No periods logged yet.</div>
-              )}
-            </CardContent>
-          </Card>
-        )}
-      </div>
-      
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
-        {/* Placeholder for real charts since I'll build them in the actual pages */}
-        <Card className="bg-card">
-          <CardHeader>
-            <CardTitle className="text-lg font-serif">Getting Started</CardTitle>
-            <CardDescription>Track your health entries from the sidebar</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground leading-relaxed mb-4">
-              Welcome to your family health journal. You can log your weight and length over time to see trends. 
-              {user.gender === 'female' && ' You also have access to cycle tracking.'}
-            </p>
-          </CardContent>
-        </Card>
+                <div className="text-2xl font-bold">{value}</div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between pb-3">
+          <CardTitle className="text-base font-medium">Your Family Members</CardTitle>
+          <Link href="/family-members">
+            <Button variant="outline" size="sm" className="gap-1.5"><Plus className="w-3.5 h-3.5" /> Add Member</Button>
+          </Link>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {[1, 2].map(i => <div key={i} className="h-20 bg-muted/30 animate-pulse rounded-lg" />)}
+            </div>
+          ) : members.length === 0 ? (
+            <div className="text-center py-12">
+              <Users className="w-10 h-10 text-muted-foreground/30 mx-auto mb-3" />
+              <p className="text-muted-foreground font-medium">No family members yet</p>
+              <p className="text-sm text-muted-foreground/70 mt-1">Add family members to start tracking their health data</p>
+              <Link href="/family-members">
+                <Button className="mt-4 gap-2"><Plus className="w-4 h-4" /> Add First Member</Button>
+              </Link>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {(members as FamilyMember[]).map((m) => (
+                <div key={m.id} className="flex items-center gap-3 p-3 rounded-lg border border-border hover:bg-accent/30 transition-colors">
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white shrink-0 ${m.gender === "female" ? "bg-pink-400" : "bg-blue-400"}`}>
+                    {m.dateOfBirth && calcAge(m.dateOfBirth)?.includes("month") ? <Baby className="w-5 h-5" /> : <User className="w-5 h-5" />}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium text-sm truncate">{m.name}</div>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <Badge variant="outline" className={`text-xs ${m.gender === "female" ? "border-pink-300 text-pink-600" : "border-blue-300 text-blue-600"}`}>
+                        {m.gender === "female" ? "Female" : "Male"}
+                      </Badge>
+                      {m.dateOfBirth && <span className="text-xs text-muted-foreground">{calcAge(m.dateOfBirth)}</span>}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {[
+          { href: "/weight", icon: Scale, label: "Weight Log", desc: "Track weight measurements", color: "bg-emerald-500/10 text-emerald-600" },
+          { href: "/length", icon: Ruler, label: "Height Log", desc: "Track height & growth", color: "bg-blue-500/10 text-blue-600" },
+          ...(femaleMembers.length > 0 ? [{ href: "/period", icon: Droplet, label: "Period Tracking", desc: "Track menstrual cycles", color: "bg-pink-500/10 text-pink-600" }] : []),
+        ].map(({ href, icon: Icon, label, desc, color }) => (
+          <Link key={href} href={href}>
+            <Card className="cursor-pointer hover:shadow-md transition-all hover:-translate-y-0.5">
+              <CardContent className="p-5">
+                <div className={`w-10 h-10 rounded-lg flex items-center justify-center mb-3 ${color}`}>
+                  <Icon className="w-5 h-5" />
+                </div>
+                <div className="font-medium">{label}</div>
+                <div className="text-sm text-muted-foreground mt-1">{desc}</div>
+              </CardContent>
+            </Card>
+          </Link>
+        ))}
       </div>
     </div>
   );

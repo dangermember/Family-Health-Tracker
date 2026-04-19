@@ -1,4 +1,4 @@
-import { createContext, useContext, ReactNode } from "react";
+import { createContext, useContext, useEffect, ReactNode } from "react";
 import { useGetMe } from "@workspace/api-client-react";
 import { useLocation } from "wouter";
 
@@ -7,7 +7,6 @@ type User = {
   username: string;
   displayName: string;
   role: string;
-  gender: string | null;
   status: string;
   createdAt: string;
 };
@@ -29,18 +28,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
   });
 
-  // Redirect to login if not logged in and not on an auth page
-  if (isError && !isAuthPage) {
-    setLocation("/login");
-  }
+  useEffect(() => {
+    if (isError && !isAuthPage) {
+      setLocation("/login");
+    }
+  }, [isError, isAuthPage]);
 
-  // Redirect to dashboard if logged in and on an auth page
-  if (user && isAuthPage) {
-    setLocation("/dashboard");
-  }
+  useEffect(() => {
+    if (user && isAuthPage) {
+      setLocation("/dashboard");
+    }
+  }, [user, isAuthPage]);
 
   return (
-    <AuthContext.Provider value={{ user: user ?? null, isLoading }}>
+    <AuthContext.Provider value={{ user: (user as User) ?? null, isLoading }}>
       {children}
     </AuthContext.Provider>
   );

@@ -3,15 +3,15 @@
  * Do not edit manually.
  * Api
  * Family Health Tracker API
- * OpenAPI spec version: 0.1.0
+ * OpenAPI spec version: 0.2.0
  */
 
 export interface LengthEntry {
   id: number;
-  userId: number;
+  memberId: number;
   lengthCm: number;
   recordedAt: Date;
   /** @nullable */
-  note: string | null;
+  note?: string | null;
   createdAt: Date;
 }

@@ -3,15 +3,12 @@
  * Do not edit manually.
  * Api
  * Family Health Tracker API
- * OpenAPI spec version: 0.1.0
+ * OpenAPI spec version: 0.2.0
  */
 
 export interface CreatePeriodEntryBody {
+  memberId: number;
   startDate: Date;
-  /** @nullable */
-  endDate?: Date | null;
-  /** @nullable */
-  numberOfDays?: number | null;
-  /** @nullable */
-  note?: string | null;
+  endDate?: Date;
+  note?: string;
 }

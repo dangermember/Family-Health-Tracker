@@ -3,12 +3,11 @@
  * Do not edit manually.
  * Api
  * Family Health Tracker API
- * OpenAPI spec version: 0.1.0
+ * OpenAPI spec version: 0.2.0
  */
 import * as zod from "zod";
 
 /**
- * Returns server health status
  * @summary Health check
  */
 export const HealthCheckResponse = zod.object({
@@ -16,13 +15,12 @@ export const HealthCheckResponse = zod.object({
 });
 
 /**
- * @summary Register a new user
+ * @summary Register a new user (pending admin approval)
  */
 export const RegisterBody = zod.object({
   username: zod.string(),
   password: zod.string(),
   displayName: zod.string(),
-  gender: zod.enum(["male", "female"]),
 });
 
 /**
@@ -39,9 +37,6 @@ export const LoginResponse = zod.object({
     username: zod.string(),
     displayName: zod.string(),
     role: zod.enum(["admin", "user"]),
-    gender: zod
-      .union([zod.literal("male"), zod.literal("female"), zod.literal(null)])
-      .nullable(),
     status: zod.enum(["pending", "active", "suspended"]),
     createdAt: zod.coerce.date(),
   }),
@@ -64,9 +59,24 @@ export const GetMeResponse = zod.object({
   username: zod.string(),
   displayName: zod.string(),
   role: zod.enum(["admin", "user"]),
-  gender: zod
-    .union([zod.literal("male"), zod.literal("female"), zod.literal(null)])
-    .nullable(),
+  status: zod.enum(["pending", "active", "suspended"]),
+  createdAt: zod.coerce.date(),
+});
+
+/**
+ * @summary Update current user profile
+ */
+export const UpdateMeBody = zod.object({
+  displayName: zod.string().optional(),
+  currentPassword: zod.string().optional(),
+  newPassword: zod.string().optional(),
+});
+
+export const UpdateMeResponse = zod.object({
+  id: zod.number(),
+  username: zod.string(),
+  displayName: zod.string(),
+  role: zod.enum(["admin", "user"]),
   status: zod.enum(["pending", "active", "suspended"]),
   createdAt: zod.coerce.date(),
 });
@@ -83,9 +93,6 @@ export const ListUsersResponseItem = zod.object({
   username: zod.string(),
   displayName: zod.string(),
   role: zod.enum(["admin", "user"]),
-  gender: zod
-    .union([zod.literal("male"), zod.literal("female"), zod.literal(null)])
-    .nullable(),
   status: zod.enum(["pending", "active", "suspended"]),
   createdAt: zod.coerce.date(),
 });
@@ -98,8 +105,7 @@ export const CreateUserBody = zod.object({
   username: zod.string(),
   password: zod.string(),
   displayName: zod.string(),
-  role: zod.enum(["admin", "user"]),
-  gender: zod.enum(["male", "female"]),
+  role: zod.enum(["admin", "user"]).optional(),
   status: zod.enum(["pending", "active", "suspended"]).optional(),
 });
 
@@ -115,9 +121,6 @@ export const GetUserResponse = zod.object({
   username: zod.string(),
   displayName: zod.string(),
   role: zod.enum(["admin", "user"]),
-  gender: zod
-    .union([zod.literal("male"), zod.literal("female"), zod.literal(null)])
-    .nullable(),
   status: zod.enum(["pending", "active", "suspended"]),
   createdAt: zod.coerce.date(),
 });
@@ -132,7 +135,6 @@ export const UpdateUserParams = zod.object({
 export const UpdateUserBody = zod.object({
   displayName: zod.string().optional(),
   role: zod.enum(["admin", "user"]).optional(),
-  gender: zod.enum(["male", "female"]).optional(),
   status: zod.enum(["pending", "active", "suspended"]).optional(),
 });
 
@@ -141,9 +143,6 @@ export const UpdateUserResponse = zod.object({
   username: zod.string(),
   displayName: zod.string(),
   role: zod.enum(["admin", "user"]),
-  gender: zod
-    .union([zod.literal("male"), zod.literal("female"), zod.literal(null)])
-    .nullable(),
   status: zod.enum(["pending", "active", "suspended"]),
   createdAt: zod.coerce.date(),
 });
@@ -183,9 +182,6 @@ export const SuspendUserResponse = zod.object({
   username: zod.string(),
   displayName: zod.string(),
   role: zod.enum(["admin", "user"]),
-  gender: zod
-    .union([zod.literal("male"), zod.literal("female"), zod.literal(null)])
-    .nullable(),
   status: zod.enum(["pending", "active", "suspended"]),
   createdAt: zod.coerce.date(),
 });
@@ -202,9 +198,6 @@ export const ApproveUserResponse = zod.object({
   username: zod.string(),
   displayName: zod.string(),
   role: zod.enum(["admin", "user"]),
-  gender: zod
-    .union([zod.literal("male"), zod.literal("female"), zod.literal(null)])
-    .nullable(),
   status: zod.enum(["pending", "active", "suspended"]),
   createdAt: zod.coerce.date(),
 });
@@ -221,29 +214,106 @@ export const ActivateUserResponse = zod.object({
   username: zod.string(),
   displayName: zod.string(),
   role: zod.enum(["admin", "user"]),
-  gender: zod
-    .union([zod.literal("male"), zod.literal("female"), zod.literal(null)])
-    .nullable(),
   status: zod.enum(["pending", "active", "suspended"]),
   createdAt: zod.coerce.date(),
 });
 
 /**
- * @summary List weight entries for the current user
+ * @summary Get admin overview stats (admin only)
+ */
+export const GetAdminOverviewResponse = zod.object({
+  totalUsers: zod.number(),
+  pendingUsers: zod.number(),
+  activeUsers: zod.number(),
+  suspendedUsers: zod.number(),
+  totalFamilyMembers: zod.number(),
+  totalWeightEntries: zod.number(),
+  totalLengthEntries: zod.number(),
+  totalPeriodEntries: zod.number(),
+});
+
+/**
+ * @summary List current user's family members
+ */
+export const ListFamilyMembersResponseItem = zod.object({
+  id: zod.number(),
+  userId: zod.number(),
+  name: zod.string(),
+  gender: zod.enum(["male", "female"]),
+  dateOfBirth: zod.coerce.date().nullish(),
+  createdAt: zod.coerce.date(),
+});
+export const ListFamilyMembersResponse = zod.array(
+  ListFamilyMembersResponseItem,
+);
+
+/**
+ * @summary Add a family member
+ */
+export const CreateFamilyMemberBody = zod.object({
+  name: zod.string(),
+  gender: zod.enum(["male", "female"]),
+  dateOfBirth: zod.coerce.date().optional(),
+});
+
+/**
+ * @summary Get a family member
+ */
+export const GetFamilyMemberParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const GetFamilyMemberResponse = zod.object({
+  id: zod.number(),
+  userId: zod.number(),
+  name: zod.string(),
+  gender: zod.enum(["male", "female"]),
+  dateOfBirth: zod.coerce.date().nullish(),
+  createdAt: zod.coerce.date(),
+});
+
+/**
+ * @summary Update a family member
+ */
+export const UpdateFamilyMemberParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const UpdateFamilyMemberBody = zod.object({
+  name: zod.string().optional(),
+  gender: zod.enum(["male", "female"]).optional(),
+  dateOfBirth: zod.coerce.date().nullish(),
+});
+
+export const UpdateFamilyMemberResponse = zod.object({
+  id: zod.number(),
+  userId: zod.number(),
+  name: zod.string(),
+  gender: zod.enum(["male", "female"]),
+  dateOfBirth: zod.coerce.date().nullish(),
+  createdAt: zod.coerce.date(),
+});
+
+/**
+ * @summary Delete a family member and all their data
+ */
+export const DeleteFamilyMemberParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+/**
+ * @summary List weight entries for a family member
  */
 export const ListWeightEntriesQueryParams = zod.object({
-  memberId: zod.coerce
-    .number()
-    .nullish()
-    .describe("Family member user ID (if viewing own family member)"),
+  memberId: zod.coerce.number(),
 });
 
 export const ListWeightEntriesResponseItem = zod.object({
   id: zod.number(),
-  userId: zod.number(),
+  memberId: zod.number(),
   weightKg: zod.number(),
   recordedAt: zod.coerce.date(),
-  note: zod.string().nullable(),
+  note: zod.string().nullish(),
   createdAt: zod.coerce.date(),
 });
 export const ListWeightEntriesResponse = zod.array(
@@ -251,13 +321,13 @@ export const ListWeightEntriesResponse = zod.array(
 );
 
 /**
- * @summary Add a weight entry
+ * @summary Add a weight entry for a family member
  */
 export const CreateWeightEntryBody = zod.object({
+  memberId: zod.number(),
   weightKg: zod.number(),
   recordedAt: zod.coerce.date(),
-  note: zod.string().nullish(),
-  memberId: zod.number().nullish(),
+  note: zod.string().optional(),
 });
 
 /**
@@ -275,10 +345,10 @@ export const UpdateWeightEntryBody = zod.object({
 
 export const UpdateWeightEntryResponse = zod.object({
   id: zod.number(),
-  userId: zod.number(),
+  memberId: zod.number(),
   weightKg: zod.number(),
   recordedAt: zod.coerce.date(),
-  note: zod.string().nullable(),
+  note: zod.string().nullish(),
   createdAt: zod.coerce.date(),
 });
 
@@ -290,18 +360,18 @@ export const DeleteWeightEntryParams = zod.object({
 });
 
 /**
- * @summary List length/height entries for the current user
+ * @summary List height/length entries for a family member
  */
 export const ListLengthEntriesQueryParams = zod.object({
-  memberId: zod.coerce.number().nullish().describe("Family member user ID"),
+  memberId: zod.coerce.number(),
 });
 
 export const ListLengthEntriesResponseItem = zod.object({
   id: zod.number(),
-  userId: zod.number(),
+  memberId: zod.number(),
   lengthCm: zod.number(),
   recordedAt: zod.coerce.date(),
-  note: zod.string().nullable(),
+  note: zod.string().nullish(),
   createdAt: zod.coerce.date(),
 });
 export const ListLengthEntriesResponse = zod.array(
@@ -309,17 +379,17 @@ export const ListLengthEntriesResponse = zod.array(
 );
 
 /**
- * @summary Add a length/height entry
+ * @summary Add a height/length entry for a family member
  */
 export const CreateLengthEntryBody = zod.object({
+  memberId: zod.number(),
   lengthCm: zod.number(),
   recordedAt: zod.coerce.date(),
-  note: zod.string().nullish(),
-  memberId: zod.number().nullish(),
+  note: zod.string().optional(),
 });
 
 /**
- * @summary Update a length/height entry
+ * @summary Update a height/length entry
  */
 export const UpdateLengthEntryParams = zod.object({
   id: zod.coerce.number(),
@@ -333,30 +403,37 @@ export const UpdateLengthEntryBody = zod.object({
 
 export const UpdateLengthEntryResponse = zod.object({
   id: zod.number(),
-  userId: zod.number(),
+  memberId: zod.number(),
   lengthCm: zod.number(),
   recordedAt: zod.coerce.date(),
-  note: zod.string().nullable(),
+  note: zod.string().nullish(),
   createdAt: zod.coerce.date(),
 });
 
 /**
- * @summary Delete a length/height entry
+ * @summary Delete a height/length entry
  */
 export const DeleteLengthEntryParams = zod.object({
   id: zod.coerce.number(),
 });
 
 /**
- * @summary List period entries for the current user (private)
+ * @summary List period entries for a female family member
  */
+export const ListPeriodEntriesQueryParams = zod.object({
+  memberId: zod.coerce.number(),
+});
+
 export const ListPeriodEntriesResponseItem = zod.object({
   id: zod.number(),
-  userId: zod.number(),
+  memberId: zod.number(),
   startDate: zod.coerce.date(),
-  endDate: zod.coerce.date().nullable(),
-  numberOfDays: zod.number().nullable(),
-  note: zod.string().nullable(),
+  endDate: zod.coerce.date().nullish(),
+  numberOfDays: zod
+    .number()
+    .nullish()
+    .describe("Automatically calculated from startDate and endDate"),
+  note: zod.string().nullish(),
   createdAt: zod.coerce.date(),
 });
 export const ListPeriodEntriesResponse = zod.array(
@@ -364,13 +441,13 @@ export const ListPeriodEntriesResponse = zod.array(
 );
 
 /**
- * @summary Add a period entry (private)
+ * @summary Add a period entry for a female family member
  */
 export const CreatePeriodEntryBody = zod.object({
+  memberId: zod.number(),
   startDate: zod.coerce.date(),
-  endDate: zod.coerce.date().nullish(),
-  numberOfDays: zod.number().nullish(),
-  note: zod.string().nullish(),
+  endDate: zod.coerce.date().optional(),
+  note: zod.string().optional(),
 });
 
 /**
@@ -383,17 +460,19 @@ export const UpdatePeriodEntryParams = zod.object({
 export const UpdatePeriodEntryBody = zod.object({
   startDate: zod.coerce.date().optional(),
   endDate: zod.coerce.date().nullish(),
-  numberOfDays: zod.number().nullish(),
   note: zod.string().nullish(),
 });
 
 export const UpdatePeriodEntryResponse = zod.object({
   id: zod.number(),
-  userId: zod.number(),
+  memberId: zod.number(),
   startDate: zod.coerce.date(),
-  endDate: zod.coerce.date().nullable(),
-  numberOfDays: zod.number().nullable(),
-  note: zod.string().nullable(),
+  endDate: zod.coerce.date().nullish(),
+  numberOfDays: zod
+    .number()
+    .nullish()
+    .describe("Automatically calculated from startDate and endDate"),
+  note: zod.string().nullish(),
   createdAt: zod.coerce.date(),
 });
 
@@ -402,43 +481,4 @@ export const UpdatePeriodEntryResponse = zod.object({
  */
 export const DeletePeriodEntryParams = zod.object({
   id: zod.coerce.number(),
-});
-
-/**
- * @summary Get current user's health summary (latest readings, trends)
- */
-export const GetMySummaryResponse = zod.object({
-  latestWeight: zod.number().nullable(),
-  weightTrend: zod.number().nullable(),
-  latestLength: zod.number().nullable(),
-  weightEntriesCount: zod.number(),
-  lengthEntriesCount: zod.number(),
-  lastPeriodStart: zod.coerce.date().nullable(),
-  nextPeriodEstimate: zod.coerce.date().nullable(),
-  avgCycleLength: zod.number().nullable(),
-});
-
-/**
- * @summary Get admin overview stats (admin only)
- */
-export const GetAdminOverviewResponse = zod.object({
-  totalUsers: zod.number(),
-  activeUsers: zod.number(),
-  pendingApprovals: zod.number(),
-  suspendedUsers: zod.number(),
-  totalWeightEntries: zod.number(),
-  totalLengthEntries: zod.number(),
-  recentRegistrations: zod.array(
-    zod.object({
-      id: zod.number(),
-      username: zod.string(),
-      displayName: zod.string(),
-      role: zod.enum(["admin", "user"]),
-      gender: zod
-        .union([zod.literal("male"), zod.literal("female"), zod.literal(null)])
-        .nullable(),
-      status: zod.enum(["pending", "active", "suspended"]),
-      createdAt: zod.coerce.date(),
-    }),
-  ),
 });

@@ -13,7 +13,6 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { HeartPulse, CheckCircle2 } from "lucide-react";
 import { useState } from "react";
 
@@ -21,7 +20,6 @@ const registerSchema = z.object({
   username: z.string().min(3, "Username must be at least 3 characters").max(20),
   password: z.string().min(6, "Password must be at least 6 characters"),
   displayName: z.string().min(2, "Display name must be at least 2 characters"),
-  gender: z.enum(["male", "female"]),
 });
 
 type RegisterFormValues = z.infer<typeof registerSchema>;
@@ -36,13 +34,12 @@ export default function Register() {
       username: "",
       password: "",
       displayName: "",
-      gender: "male",
     },
   });
 
   function onSubmit(data: RegisterFormValues) {
     register.mutate(
-      { data: { ...data, gender: data.gender as "male" | "female" } },
+      { data },
       {
         onSuccess: () => {
           setSuccess(true);
@@ -137,41 +134,6 @@ export default function Register() {
                   <FormLabel>Password</FormLabel>
                   <FormControl>
                     <Input type="password" placeholder="At least 6 characters" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="gender"
-              render={({ field }) => (
-                <FormItem className="space-y-3">
-                  <FormLabel>Sex</FormLabel>
-                  <FormControl>
-                    <RadioGroup
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                      className="flex space-x-4"
-                    >
-                      <FormItem className="flex items-center space-x-2 space-y-0">
-                        <FormControl>
-                          <RadioGroupItem value="male" />
-                        </FormControl>
-                        <FormLabel className="font-normal cursor-pointer">
-                          Male
-                        </FormLabel>
-                      </FormItem>
-                      <FormItem className="flex items-center space-x-2 space-y-0">
-                        <FormControl>
-                          <RadioGroupItem value="female" />
-                        </FormControl>
-                        <FormLabel className="font-normal cursor-pointer">
-                          Female
-                        </FormLabel>
-                      </FormItem>
-                    </RadioGroup>
                   </FormControl>
                   <FormMessage />
                 </FormItem>

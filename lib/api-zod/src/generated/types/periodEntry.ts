@@ -3,18 +3,21 @@
  * Do not edit manually.
  * Api
  * Family Health Tracker API
- * OpenAPI spec version: 0.1.0
+ * OpenAPI spec version: 0.2.0
  */
 
 export interface PeriodEntry {
   id: number;
-  userId: number;
+  memberId: number;
   startDate: Date;
   /** @nullable */
-  endDate: Date | null;
+  endDate?: Date | null;
+  /**
+   * Automatically calculated from startDate and endDate
+   * @nullable
+   */
+  numberOfDays?: number | null;
   /** @nullable */
-  numberOfDays: number | null;
-  /** @nullable */
-  note: string | null;
+  note?: string | null;
   createdAt: Date;
 }

@@ -3,9 +3,8 @@
  * Do not edit manually.
  * Api
  * Family Health Tracker API
- * OpenAPI spec version: 0.1.0
+ * OpenAPI spec version: 0.2.0
  */
-import type { CreateUserBodyGender } from "./createUserBodyGender";
 import type { CreateUserBodyRole } from "./createUserBodyRole";
 import type { CreateUserBodyStatus } from "./createUserBodyStatus";
 
@@ -13,7 +12,6 @@ export interface CreateUserBody {
   username: string;
   password: string;
   displayName: string;
-  role: CreateUserBodyRole;
-  gender: CreateUserBodyGender;
+  role?: CreateUserBodyRole;
   status?: CreateUserBodyStatus;
 }

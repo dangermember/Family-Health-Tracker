@@ -3,7 +3,7 @@
  * Do not edit manually.
  * Api
  * Family Health Tracker API
- * OpenAPI spec version: 0.1.0
+ * OpenAPI spec version: 0.2.0
  */
 export interface HealthStatus {
   status: string;
@@ -25,16 +25,6 @@ export const UserRole = {
   user: "user",
 } as const;
 
-/**
- * @nullable
- */
-export type UserGender = (typeof UserGender)[keyof typeof UserGender] | null;
-
-export const UserGender = {
-  male: "male",
-  female: "female",
-} as const;
-
 export type UserStatus = (typeof UserStatus)[keyof typeof UserStatus];
 
 export const UserStatus = {
@@ -48,8 +38,6 @@ export interface User {
   username: string;
   displayName: string;
   role: UserRole;
-  /** @nullable */
-  gender: UserGender;
   status: UserStatus;
   createdAt: string;
 }
@@ -59,24 +47,21 @@ export interface AuthResponse {
   message?: string;
 }
 
-export type RegisterBodyGender =
-  (typeof RegisterBodyGender)[keyof typeof RegisterBodyGender];
-
-export const RegisterBodyGender = {
-  male: "male",
-  female: "female",
-} as const;
-
 export interface RegisterBody {
   username: string;
   password: string;
   displayName: string;
-  gender: RegisterBodyGender;
 }
 
 export interface LoginBody {
   username: string;
   password: string;
+}
+
+export interface UpdateMeBody {
+  displayName?: string;
+  currentPassword?: string;
+  newPassword?: string;
 }
 
 export type CreateUserBodyRole =
@@ -85,14 +70,6 @@ export type CreateUserBodyRole =
 export const CreateUserBodyRole = {
   admin: "admin",
   user: "user",
-} as const;
-
-export type CreateUserBodyGender =
-  (typeof CreateUserBodyGender)[keyof typeof CreateUserBodyGender];
-
-export const CreateUserBodyGender = {
-  male: "male",
-  female: "female",
 } as const;
 
 export type CreateUserBodyStatus =
@@ -108,8 +85,7 @@ export interface CreateUserBody {
   username: string;
   password: string;
   displayName: string;
-  role: CreateUserBodyRole;
-  gender: CreateUserBodyGender;
+  role?: CreateUserBodyRole;
   status?: CreateUserBodyStatus;
 }
 
@@ -119,14 +95,6 @@ export type UpdateUserBodyRole =
 export const UpdateUserBodyRole = {
   admin: "admin",
   user: "user",
-} as const;
-
-export type UpdateUserBodyGender =
-  (typeof UpdateUserBodyGender)[keyof typeof UpdateUserBodyGender];
-
-export const UpdateUserBodyGender = {
-  male: "male",
-  female: "female",
 } as const;
 
 export type UpdateUserBodyStatus =
@@ -141,7 +109,6 @@ export const UpdateUserBodyStatus = {
 export interface UpdateUserBody {
   displayName?: string;
   role?: UpdateUserBodyRole;
-  gender?: UpdateUserBodyGender;
   status?: UpdateUserBodyStatus;
 }
 
@@ -149,23 +116,79 @@ export interface ResetPasswordBody {
   newPassword: string;
 }
 
-export interface WeightEntry {
+export interface AdminOverview {
+  totalUsers: number;
+  pendingUsers: number;
+  activeUsers: number;
+  suspendedUsers: number;
+  totalFamilyMembers: number;
+  totalWeightEntries: number;
+  totalLengthEntries: number;
+  totalPeriodEntries: number;
+}
+
+export type FamilyMemberGender =
+  (typeof FamilyMemberGender)[keyof typeof FamilyMemberGender];
+
+export const FamilyMemberGender = {
+  male: "male",
+  female: "female",
+} as const;
+
+export interface FamilyMember {
   id: number;
   userId: number;
-  weightKg: number;
-  recordedAt: string;
+  name: string;
+  gender: FamilyMemberGender;
   /** @nullable */
-  note: string | null;
+  dateOfBirth?: string | null;
   createdAt: string;
 }
 
-export interface CreateWeightEntryBody {
+export type CreateFamilyMemberBodyGender =
+  (typeof CreateFamilyMemberBodyGender)[keyof typeof CreateFamilyMemberBodyGender];
+
+export const CreateFamilyMemberBodyGender = {
+  male: "male",
+  female: "female",
+} as const;
+
+export interface CreateFamilyMemberBody {
+  name: string;
+  gender: CreateFamilyMemberBodyGender;
+  dateOfBirth?: string;
+}
+
+export type UpdateFamilyMemberBodyGender =
+  (typeof UpdateFamilyMemberBodyGender)[keyof typeof UpdateFamilyMemberBodyGender];
+
+export const UpdateFamilyMemberBodyGender = {
+  male: "male",
+  female: "female",
+} as const;
+
+export interface UpdateFamilyMemberBody {
+  name?: string;
+  gender?: UpdateFamilyMemberBodyGender;
+  /** @nullable */
+  dateOfBirth?: string | null;
+}
+
+export interface WeightEntry {
+  id: number;
+  memberId: number;
   weightKg: number;
   recordedAt: string;
   /** @nullable */
   note?: string | null;
-  /** @nullable */
-  memberId?: number | null;
+  createdAt: string;
+}
+
+export interface CreateWeightEntryBody {
+  memberId: number;
+  weightKg: number;
+  recordedAt: string;
+  note?: string;
 }
 
 export interface UpdateWeightEntryBody {
@@ -177,21 +200,19 @@ export interface UpdateWeightEntryBody {
 
 export interface LengthEntry {
   id: number;
-  userId: number;
-  lengthCm: number;
-  recordedAt: string;
-  /** @nullable */
-  note: string | null;
-  createdAt: string;
-}
-
-export interface CreateLengthEntryBody {
+  memberId: number;
   lengthCm: number;
   recordedAt: string;
   /** @nullable */
   note?: string | null;
-  /** @nullable */
-  memberId?: number | null;
+  createdAt: string;
+}
+
+export interface CreateLengthEntryBody {
+  memberId: number;
+  lengthCm: number;
+  recordedAt: string;
+  note?: string;
 }
 
 export interface UpdateLengthEntryBody {
@@ -203,25 +224,25 @@ export interface UpdateLengthEntryBody {
 
 export interface PeriodEntry {
   id: number;
-  userId: number;
+  memberId: number;
   startDate: string;
   /** @nullable */
-  endDate: string | null;
+  endDate?: string | null;
+  /**
+   * Automatically calculated from startDate and endDate
+   * @nullable
+   */
+  numberOfDays?: number | null;
   /** @nullable */
-  numberOfDays: number | null;
-  /** @nullable */
-  note: string | null;
+  note?: string | null;
   createdAt: string;
 }
 
 export interface CreatePeriodEntryBody {
+  memberId: number;
   startDate: string;
-  /** @nullable */
-  endDate?: string | null;
-  /** @nullable */
-  numberOfDays?: number | null;
-  /** @nullable */
-  note?: string | null;
+  endDate?: string;
+  note?: string;
 }
 
 export interface UpdatePeriodEntryBody {
@@ -229,36 +250,7 @@ export interface UpdatePeriodEntryBody {
   /** @nullable */
   endDate?: string | null;
   /** @nullable */
-  numberOfDays?: number | null;
-  /** @nullable */
   note?: string | null;
-}
-
-export interface HealthSummary {
-  /** @nullable */
-  latestWeight: number | null;
-  /** @nullable */
-  weightTrend: number | null;
-  /** @nullable */
-  latestLength: number | null;
-  weightEntriesCount: number;
-  lengthEntriesCount: number;
-  /** @nullable */
-  lastPeriodStart: string | null;
-  /** @nullable */
-  nextPeriodEstimate: string | null;
-  /** @nullable */
-  avgCycleLength: number | null;
-}
-
-export interface AdminOverview {
-  totalUsers: number;
-  activeUsers: number;
-  pendingApprovals: number;
-  suspendedUsers: number;
-  totalWeightEntries: number;
-  totalLengthEntries: number;
-  recentRegistrations: User[];
 }
 
 export type ListUsersParams = {
@@ -275,17 +267,13 @@ export const ListUsersStatus = {
 } as const;
 
 export type ListWeightEntriesParams = {
-  /**
-   * Family member user ID (if viewing own family member)
-   * @nullable
-   */
-  memberId?: number | null;
+  memberId: number;
 };
 
 export type ListLengthEntriesParams = {
-  /**
-   * Family member user ID
-   * @nullable
-   */
-  memberId?: number | null;
+  memberId: number;
+};
+
+export type ListPeriodEntriesParams = {
+  memberId: number;
 };

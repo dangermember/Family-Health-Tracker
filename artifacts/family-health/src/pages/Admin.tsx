@@ -17,7 +17,7 @@ import {
   useGetAdminOverview,
   getGetAdminOverviewQueryKey,
 } from "@workspace/api-client-react";
-type User = { id: number; username: string; displayName: string; role: string; gender: string | null; status: string; createdAt: string; };
+type User = { id: number; username: string; displayName: string; role: string; status: string; createdAt: string; };
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -50,13 +50,11 @@ const createUserSchema = z.object({
   password: z.string().min(6, "Password must be at least 6 characters"),
   displayName: z.string().min(1, "Display name is required"),
   role: z.enum(["user", "admin"]),
-  gender: z.enum(["male", "female"]),
 });
 
 const editUserSchema = z.object({
   displayName: z.string().min(1, "Display name is required"),
   role: z.enum(["user", "admin"]),
-  gender: z.enum(["male", "female"]),
 });
 
 const resetPasswordSchema = z.object({
@@ -117,12 +115,12 @@ export default function Admin() {
 
   const createForm = useForm<CreateUserFormValues>({
     resolver: zodResolver(createUserSchema),
-    defaultValues: { username: "", password: "", displayName: "", role: "user", gender: "male" },
+    defaultValues: { username: "", password: "", displayName: "", role: "user" },
   });
 
   const editForm = useForm<EditUserFormValues>({
     resolver: zodResolver(editUserSchema),
-    defaultValues: { displayName: "", role: "user", gender: "male" },
+    defaultValues: { displayName: "", role: "user" },
   });
 
   const resetPasswordForm = useForm<ResetPasswordFormValues>({
@@ -154,7 +152,6 @@ export default function Admin() {
     editForm.reset({
       displayName: user.displayName,
       role: user.role as "user" | "admin",
-      gender: (user.gender ?? "male") as "male" | "female",
     });
   }
 
@@ -260,7 +257,6 @@ export default function Admin() {
             <TableHead>Name</TableHead>
             <TableHead>Username</TableHead>
             <TableHead>Role</TableHead>
-            <TableHead>Gender</TableHead>
             <TableHead>Status</TableHead>
             <TableHead>Joined</TableHead>
             <TableHead className="text-right">Actions</TableHead>
@@ -272,7 +268,6 @@ export default function Admin() {
               <TableCell className="font-medium">{user.displayName}</TableCell>
               <TableCell className="text-muted-foreground">{user.username}</TableCell>
               <TableCell className="capitalize">{user.role}</TableCell>
-              <TableCell className="capitalize text-muted-foreground">{user.gender ?? "—"}</TableCell>
               <TableCell><StatusBadge status={user.status} /></TableCell>
               <TableCell className="text-muted-foreground text-sm">
                 {format(new Date(user.createdAt), "MMM d, yyyy")}
@@ -332,7 +327,7 @@ export default function Admin() {
               </CardTitle>
             </CardHeader>
             <CardContent className="px-4 pb-4">
-              <span className="text-3xl font-serif text-amber-600">{overview.pendingApprovals}</span>
+              <span className="text-3xl font-serif text-amber-600">{overview.pendingUsers}</span>
             </CardContent>
           </Card>
           <Card>
@@ -408,34 +403,19 @@ export default function Admin() {
                   <FormMessage />
                 </FormItem>
               )} />
-              <div className="grid grid-cols-2 gap-4">
-                <FormField control={createForm.control} name="role" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Role</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
-                      <SelectContent>
-                        <SelectItem value="user">User</SelectItem>
-                        <SelectItem value="admin">Admin</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )} />
-                <FormField control={createForm.control} name="gender" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Gender</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
-                      <SelectContent>
-                        <SelectItem value="male">Male</SelectItem>
-                        <SelectItem value="female">Female</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )} />
-              </div>
+              <FormField control={createForm.control} name="role" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Role</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                    <SelectContent>
+                      <SelectItem value="user">User</SelectItem>
+                      <SelectItem value="admin">Admin</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )} />
               <DialogFooter>
                 <Button type="button" variant="outline" onClick={() => setCreateDialogOpen(false)}>Cancel</Button>
                 <Button type="submit" disabled={createMutation.isPending}>Create User</Button>
@@ -460,34 +440,19 @@ export default function Admin() {
                   <FormMessage />
                 </FormItem>
               )} />
-              <div className="grid grid-cols-2 gap-4">
-                <FormField control={editForm.control} name="role" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Role</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
-                      <SelectContent>
-                        <SelectItem value="user">User</SelectItem>
-                        <SelectItem value="admin">Admin</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )} />
-                <FormField control={editForm.control} name="gender" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Gender</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
-                      <SelectContent>
-                        <SelectItem value="male">Male</SelectItem>
-                        <SelectItem value="female">Female</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )} />
-              </div>
+              <FormField control={editForm.control} name="role" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Role</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                    <SelectContent>
+                      <SelectItem value="user">User</SelectItem>
+                      <SelectItem value="admin">Admin</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )} />
               <DialogFooter>
                 <Button type="button" variant="outline" onClick={() => setEditUser(null)}>Cancel</Button>
                 <Button type="submit" disabled={updateMutation.isPending}>Save Changes</Button>

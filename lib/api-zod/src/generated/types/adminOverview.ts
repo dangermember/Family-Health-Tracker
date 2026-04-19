@@ -3,16 +3,16 @@
  * Do not edit manually.
  * Api
  * Family Health Tracker API
- * OpenAPI spec version: 0.1.0
+ * OpenAPI spec version: 0.2.0
  */
-import type { User } from "./user";
 
 export interface AdminOverview {
   totalUsers: number;
+  pendingUsers: number;
   activeUsers: number;
-  pendingApprovals: number;
   suspendedUsers: number;
+  totalFamilyMembers: number;
   totalWeightEntries: number;
   totalLengthEntries: number;
-  recentRegistrations: User[];
+  totalPeriodEntries: number;
 }

@@ -1,11 +1,11 @@
 import { pgTable, serial, integer, real, timestamp, text } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
-import { usersTable } from "./users";
+import { familyMembersTable } from "./family-members";
 
 export const lengthEntriesTable = pgTable("length_entries", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull().references(() => usersTable.id, { onDelete: "cascade" }),
+  memberId: integer("member_id").notNull().references(() => familyMembersTable.id, { onDelete: "cascade" }),
   lengthCm: real("length_cm").notNull(),
   recordedAt: timestamp("recorded_at", { withTimezone: true }).notNull(),
   note: text("note"),

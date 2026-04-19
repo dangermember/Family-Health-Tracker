@@ -3,9 +3,8 @@
  * Do not edit manually.
  * Api
  * Family Health Tracker API
- * OpenAPI spec version: 0.1.0
+ * OpenAPI spec version: 0.2.0
  */
-import type { UserGender } from "./userGender";
 import type { UserRole } from "./userRole";
 import type { UserStatus } from "./userStatus";
 
@@ -14,8 +13,6 @@ export interface User {
   username: string;
   displayName: string;
   role: UserRole;
-  /** @nullable */
-  gender: UserGender;
   status: UserStatus;
   createdAt: Date;
 }

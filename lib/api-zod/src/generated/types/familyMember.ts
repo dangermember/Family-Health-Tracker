@@ -5,13 +5,14 @@
  * Family Health Tracker API
  * OpenAPI spec version: 0.2.0
  */
+import type { FamilyMemberGender } from "./familyMemberGender";
 
-export interface WeightEntry {
+export interface FamilyMember {
   id: number;
-  memberId: number;
-  weightKg: number;
-  recordedAt: Date;
+  userId: number;
+  name: string;
+  gender: FamilyMemberGender;
   /** @nullable */
-  note?: string | null;
+  dateOfBirth?: Date | null;
   createdAt: Date;
 }

@@ -3,15 +3,13 @@
  * Do not edit manually.
  * Api
  * Family Health Tracker API
- * OpenAPI spec version: 0.1.0
+ * OpenAPI spec version: 0.2.0
  */
-import type { UpdateUserBodyGender } from "./updateUserBodyGender";
 import type { UpdateUserBodyRole } from "./updateUserBodyRole";
 import type { UpdateUserBodyStatus } from "./updateUserBodyStatus";
 
 export interface UpdateUserBody {
   displayName?: string;
   role?: UpdateUserBodyRole;
-  gender?: UpdateUserBodyGender;
   status?: UpdateUserBodyStatus;
 }

@@ -1,11 +1,11 @@
 import { pgTable, serial, integer, real, timestamp, text } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
-import { usersTable } from "./users";
+import { familyMembersTable } from "./family-members";
 
 export const weightEntriesTable = pgTable("weight_entries", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull().references(() => usersTable.id, { onDelete: "cascade" }),
+  memberId: integer("member_id").notNull().references(() => familyMembersTable.id, { onDelete: "cascade" }),
   weightKg: real("weight_kg").notNull(),
   recordedAt: timestamp("recorded_at", { withTimezone: true }).notNull(),
   note: text("note"),
