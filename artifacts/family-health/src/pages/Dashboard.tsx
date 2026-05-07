@@ -3,7 +3,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Users, Scale, Ruler, Droplet, UserPlus, Plus, Baby, User } from "lucide-react";
+import { Users, Activity, Droplet, UserPlus, Plus, Baby, User, Scale } from "lucide-react";
 import { Link } from "wouter";
 import { format } from "date-fns";
 
@@ -106,8 +106,7 @@ export default function Dashboard() {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {[
-          { href: "/weight", icon: Scale, label: "Weight Log", desc: "Track weight measurements", color: "bg-emerald-500/10 text-emerald-600" },
-          { href: "/length", icon: Ruler, label: "Height Log", desc: "Track height & growth", color: "bg-blue-500/10 text-blue-600" },
+          { href: "/growth", icon: Activity, label: "Growth Chart", desc: "Track weight & height vs WHO reference", color: "bg-emerald-500/10 text-emerald-600" },
           ...(femaleMembers.length > 0 ? [{ href: "/period", icon: Droplet, label: "Period Tracking", desc: "Track menstrual cycles", color: "bg-pink-500/10 text-pink-600" }] : []),
         ].map(({ href, icon: Icon, label, desc, color }) => (
           <Link key={href} href={href}>

@@ -9,8 +9,7 @@ import Login from "@/pages/Login";
 import Register from "@/pages/Register";
 import Dashboard from "@/pages/Dashboard";
 import FamilyMembers from "@/pages/FamilyMembers";
-import Weight from "@/pages/Weight";
-import Length from "@/pages/Length";
+import GrowthChart from "@/pages/GrowthChart";
 import Period from "@/pages/Period";
 import Admin from "@/pages/Admin";
 import Settings from "@/pages/Settings";
@@ -30,8 +29,7 @@ function App() {
                 <Route path="/register" component={Register} />
                 <Route path="/dashboard" component={Dashboard} />
                 <Route path="/family-members" component={FamilyMembers} />
-                <Route path="/weight" component={Weight} />
-                <Route path="/length" component={Length} />
+                <Route path="/growth" component={GrowthChart} />
                 <Route path="/period" component={Period} />
                 <Route path="/admin" component={Admin} />
                 <Route path="/settings" component={Settings} />

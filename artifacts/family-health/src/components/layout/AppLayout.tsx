@@ -2,7 +2,7 @@ import { Link, useLocation } from "wouter";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLogout } from "@workspace/api-client-react";
 import { 
-  HeartPulse, LayoutDashboard, Scale, Ruler, Droplet, Settings, Users, LogOut, Menu, UserPlus
+  HeartPulse, LayoutDashboard, Activity, Droplet, Settings, Users, LogOut, Menu, UserPlus
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -23,8 +23,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   const navItems = [
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { href: "/family-members", label: "Family Members", icon: Users },
-    { href: "/weight", label: "Weight Log", icon: Scale },
-    { href: "/length", label: "Height Log", icon: Ruler },
+    { href: "/growth", label: "Growth Chart", icon: Activity },
     { href: "/period", label: "Period Tracking", icon: Droplet },
     ...(user.role === "admin" ? [{ href: "/admin", label: "Admin Panel", icon: UserPlus }] : []),
     { href: "/settings", label: "Settings", icon: Settings },
